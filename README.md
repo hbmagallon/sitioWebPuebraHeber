@@ -1,2 +1,2 @@
 # sitioWebPuebraHeber
-Repositorio de prueba 
+Repositorio de prueba de un archivo R
