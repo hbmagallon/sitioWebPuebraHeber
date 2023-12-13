@@ -87,3 +87,5 @@ figura1=layout(figura1,
 
 figura1
 ```
+
+Fin de documento.
