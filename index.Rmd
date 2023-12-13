@@ -29,6 +29,9 @@ Por esto se extrajeron, De las bases de datos del [Banco de México](https://www
 
 Por custiones de disponibilidad la información se extrajo entre enero del 2008 y septiembre del 2023.
 
+![]umsnh100a.jpg
+
+
 #Desarrollo
 
 En la siguiente tabla de datos se muestran el valor de los tres incides con un valor de base 100 al 01 de enero de 2008.
