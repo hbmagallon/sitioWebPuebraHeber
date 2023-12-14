@@ -1,0 +1,90 @@
+---
+title: "Operadores programación"
+author: "Heber B. Magallón Glez."
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Operador if-ese
+
+El operador if-else sive para que la computadora realice una serie de instrucciones si se cumple una condición o regla en el condicional "if". Ciando no se cumple ("else") podemos decirle que haga otra serie diferente de instrucciones o simplemente si no se cumple la condición, que haga nada.
+
+Veamos un ejemplo: vamos a crear un objeto llamado "nota semestre". El mismo
+
+
+```{r}
+#creamos el  objeto "notaSemestre"
+
+notasemestre=6
+
+#creamos el condicional
+
+if(notasemestre>5){
+  print("felicidades, estas aprobad@!!!")
+}else{print("Estas reprobado")}
+```
+Se pueden hacer más completo si utilizamos condicionales "anidados", por ejemplo: si la calificación es mayor o igual a 8, que aparezca un mensaje diciendo "Excelente trabajo, usted aprobo!!!" y que aparezca la leyenda original de Felicidades, usted aprob@!!!, ai wa mwnoe o igual a 8. Esto, siempre y cuando se cumpla la condición de que la calificación es mayor a 5:
+
+```{r}
+#creamos el  objeto "notaSemestre"
+
+notasemestre=9
+
+#creamos el condicional
+
+if(notasemestre>5){
+  
+ 
+  # Condicional para poner un mensaje si la calificación es mayor a 8.
+  
+  if(notasemestre>8){"Excelente trabajo, usted aprobo!!!"}
+  else{print("felicidades, estas aprobado!!!")}
+  
+}else{print("Estas reprobado")}
+```
+# El operador for
+
+El operador "for" sirve para que un número finito de veces (N), se repetite N veces una serie de instrucciones o calculos. Veamos un ejemplo simple "queremos multiplicar por "N" el valor de 10.
+
+```{r}
+#Crear el objeto N
+N=11
+
+#Operador for
+
+for(contador in 1:N){
+  valorY=10*contador 
+  print(valorY)
+  }
+```
+# Insertando ecuaciones en Rmarkdown
+
+Las ecuaciones se pueden insertar de dos maneras:
+
+1. Ecuaciones en el texto (online) que es poner una ecuación o expresiones matemáticas en texto como el de este p{arrafo. Para ello se utiliza el signo de pesos para abrir y cerrar la edición de dicha ecuación. En este parrafo se presemta la ecuación de la recta $y=\alpha+\beta x$.
+
+2. Ecuaciones "flotantes" o independientes o un párrafo. Por ejemplo, la ecuación de una función cuadrática como la de abajo. Para esta se insertan abriendo dos pares de signos de pesos:
+
+$$y=\alpha x^2+\beta x+c$$
+# aproximando el número $e$ con operadores "for"
+
+El número $e$ es el límite cuando $N$ tiende a $\infty$ de un valor futuro de una inversión de un peso, invirtiendo a una tasa anualizada del 100\%, en $N$ paríodos
+
+$$e\approx\lim\limits_{n \to \infty} VF=VA\cdot(1+\frac{100\%}{N})^N$$
+
+```{r numeroe}
+# Creo el objeto N:
+N=1000
+#operador for:
+for (contador in 1:N){
+  VF=1*(1+(1/contador))^contador
+  print(VF)
+}
+```
+# El operador while
+
+Se repite hasta que se cumple una condición.
