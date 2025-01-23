@@ -1,0 +1,325 @@
+---
+title: "Eficiciencia Operativa y Digitalización 2012 y 2024"
+author: "Heber B. Magallón Glez."
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+rm(list=ls()) #Removes all items in Environment!
+
+# Librerías para leer archivos externos en formato *.xls o *.csv:
+if (!require(openxlsx)) {install.packages('openxlsx')
+  library(openxlsx)} else {library(openxlsx)}
+# Librerías para gráficas
+if (!require(plotly)) {install.packages('plotly')
+  library(plotly)} else {library(plotly)}
+if (!require(stargazer)) {install.packages('stargazer')
+  library(stargazer)} else {library(stargazer)}
+# Librerías para análisis de datos panel:
+if (!require(plm)) {install.packages('plm')
+  library(plm)} else {library(plm)}
+if (!require(lmtest)) {install.packages('lmtest')
+  library(lmtest)} else {library(lmtest)}
+if (!require(car)) {install.packages('car')
+  library(car)} else {library(car)}
+if (!require(sandwich)) {install.packages('sandwich')
+  library(sandwich)} else {library(sandwich)}
+if (!require(gplots)) {install.packages('gplots')
+  library(gplots)} else {library(gplots)}
+if (!require(dplyr)) {install.packages('dplyr')
+  library(dplyr)} else {library(dplyr)}
+if (!require(rdrop2)) {install.packages('rdrop2')
+  library(rdrop2)} else {library(rdrop2)}
+if (!require(foreign)) {install.packages('foreign')
+  library(foreign)} else {library(foreign)}
+if (!require(gdata)) {install.packages('gdata')
+  library(gdata)} else {library(gdata)}
+if (!require(dplyr)) {install.packages('dplyr')
+  library(dplyr)} else {library(dplyr)}
+if (!require(tidyverse)) {install.packages('tidyverse')
+  library(tidyverse)} else {library(tidyverse)}
+```
+
+#Efecto de la digitalización bancaria en la eficiencia operativa
+
+Esta investigación explora la incidencia de los principales puntos de acceso bancarios asentados en las TIC´s como son la Banca Móvil (BM), los Corresponsales Bancarios (CB), los Cajeros Automáticos (ATM) y las Terminales Punto de Venta (TPV) en el indicador de la Eficiencia Operativa. 
+
+Se analizan los 7 bancos más grandes (G7) dado el peso en en los principales indicadores bancarios además de ser de que que son los bancos que cuentan con los cuatro canales analizados.
+
+##Metodología
+
+El análisis se realiza mediante la metodología de Datos Panel para dos períodos de tiempo: el primero que se considera de baja adopción de los canales y comprende de 2012 a 2017. Y el segundo que se entiende de alta adopción y es de 2018 a abril de 2024.
+
+Se emplean datos mensuales de los siete bancos más importantes del sistema bancario mexicano obtenidos de los estados financieros, reportes operativos y de corresponsales bancarios publicados en el portafolio de información del portal de la Comisión Nacional Bancaria y de Valores. 
+
+
+##Período 2012-2017
+
+
+```{r dataupload}
+library(readxl)
+BD2012 <- read_excel("D:/Artículos/Congreso UMSNH 2024/BD2012.xlsx")
+View(BD2012)
+
+#Ecuacion por infraestructura
+
+eq1="EO~NATM+NTPV+log(NBM)+log(NMC)"
+
+```
+
+```{r fitFunctions, echo=FALSE}
+
+
+logLik.plm <- function(object){
+  llf <- -length(object$residuals) * log(2 * var(object$residuals) * pi)/2 - deviance(object)/(2 * var(object$residuals))
+  return(llf)
+}
+
+AIC.plm <- function(object){
+  llf <- -length(object$residuals) * log(2 * var(object$residuals) * pi)/2 - deviance(object)/(2 * var(object$residuals))
+  k.plm=object$df.residual
+  n.plm=length(object$coefficients)
+  hq.plm=(2*k.plm)-(2*llf)
+  return(hq.plm)
+}
+
+
+
+```
+
+```{r dimpanelBD,echo=FALSE}
+
+#Para determinar si un panel es balanceado o no, y cuáles son sus dimensiones.
+
+pdim(BD2012)
+
+
+
+```
+
+```{r pool eo, echo=FALSE}
+
+
+
+eo.pooled = plm(eq1,
+                 model="pooling",data=BD2012)
+
+# Estimadores robustos:
+robustos.eo.pooled<-coeftest(eo.pooled,
+              vcov=vcovNW(eo.pooled,
+                          cluster="group"))
+
+LLF.eo.pooled=logLik.plm(eo.pooled)
+AIC.eo.pooled=AIC.plm(eo.pooled)
+
+LLF=c("LLF", LLF.eo.pooled)
+AICS=c("Akaike",AIC.eo.pooled)
+
+pveo.pooled=list(
+  robustos.eo.pooled[,4])
+
+
+```
+
+```{r fixedeo, echo=FALSE}
+
+eo.fixed = plm(eq1,
+                 model="within",
+                 data=BD2012)
+
+# Estimadores robustos:
+robustos.eo.fixed<-coeftest(eo.fixed,
+              vcov=vcovNW(eo.fixed,
+                          cluster="group"))
+
+LLF.eo.fixed=logLik.plm(eo.fixed)
+AIC.eo.fixed=AIC.plm(eo.fixed)
+
+LLF=c("LLF", LLF.eo.fixed)
+AICS=c("Akaike", AIC.eo.fixed)
+
+pveo.fixed=list(
+  robustos.eo.fixed[,4])
+
+```
+
+```{r alphaseo.fixed}
+alphas.eo.fixed=fixef(eo.fixed)
+
+```
+
+
+```{r resumen}
+LLF.eo=c("LLF",LLF.eo.pooled,LLF.eo.fixed)
+AICS.eo=c("Akaike",AIC.eo.pooled,AIC.eo.fixed)
+
+# Objeto que sustituirá los p-values por los robustos de Newey-West en la tabla de salida:
+
+pveo=list(
+ robustos.eo.pooled[,4],
+ robustos.eo.fixed[,4])
+
+stargazer(eo.pooled,eo.fixed,
+          type="text",
+          report="vc*s",
+          p=pveo,
+          add.lines = list(
+            LLF.eo,
+            AICS.eo,
+            digits=4))
+```
+
+
+
+```{r pruebasEO}
+Tabla1=data.frame(eo.pooled=matrix(0,2,1),
+                  eo.fixed=matrix(0,2,1))
+                  
+                         
+# Pruebas F
+Tabla1[1,1]=pFtest(eo.fixed,eo.pooled)$p.value*100
+
+
+# Tabla final:
+stargazer(Tabla1,
+          type="text",
+          summary=FALSE, 
+          digits=5)
+```
+
+
+## Período 2018-2024
+
+
+```{r dataupload2}
+library(readxl)
+BD2024 <- read_excel("D:/Artículos/Congreso UMSNH 2024/BD2024.xlsx")
+View(BD2024)
+
+#Ecuacion por infraestructura
+
+eq2="EO~NATM+NTPV+log(NBM)+log(NMC)"
+
+```
+
+```{r fitFunctions2, echo=FALSE}
+
+
+logLik.plm <- function(object){
+  llf <- -length(object$residuals) * log(2 * var(object$residuals) * pi)/2 - deviance(object)/(2 * var(object$residuals))
+  return(llf)
+}
+
+AIC.plm <- function(object){
+  llf <- -length(object$residuals) * log(2 * var(object$residuals) * pi)/2 - deviance(object)/(2 * var(object$residuals))
+  k.plm=object$df.residual
+  n.plm=length(object$coefficients)
+  hq.plm=(2*k.plm)-(2*llf)
+  return(hq.plm)
+}
+
+
+
+```
+
+```{r dimpanelBD2,echo=FALSE}
+
+#Para determinar si un panel es balanceado o no, y cuáles son sus dimensiones.
+
+pdim(BD2024)
+
+```
+
+
+
+```{r pooleo24, echo=FALSE}
+
+eo.pooled24 = plm(eq2,
+                 model="pooling",data=BD2024)
+
+# Estimadores robustos:
+robustos.eo.pooled24<-coeftest(eo.pooled24,
+              vcov=vcovNW(eo.pooled24,
+                          cluster="group"))
+
+LLF.eo.pooled24=logLik.plm(eo.pooled24)
+AIC.eo.pooled24=AIC.plm(eo.pooled24)
+
+LLF=c("LLF", LLF.eo.pooled24)
+AICS=c("Akaike",AIC.eo.pooled24)
+
+pveo.pooled24=list(
+  robustos.eo.pooled24[,4])
+
+
+```
+
+```{r fixedeo24, echo=FALSE}
+
+eo.fixed24 = plm(eq2,
+                 model="within",
+                 data=BD2024)
+
+# Estimadores robustos:
+robustos.eo.fixed24<-coeftest(eo.fixed24,
+              vcov24=vcovNW(eo.fixed24,
+                          cluster="group"))
+
+LLF.eo.fixed24=logLik.plm(eo.fixed24)
+AIC.eo.fixed24=AIC.plm(eo.fixed24)
+
+LLF=c("LLF", LLF.eo.fixed24)
+AICS=c("Akaike", AIC.eo.fixed24)
+
+pveo.fixed24=list(
+  robustos.eo.fixed24[,4])
+
+```
+
+```{r alphaseo.fixed2}
+alphas.eo.fixed=fixef(eo.fixed)
+
+```
+
+
+```{r resumenEO24}
+LLF.eo24=c("LLF",LLF.eo.pooled24,LLF.eo.fixed24)
+AICS.eo24=c("Akaike",AIC.eo.pooled24,AIC.eo.fixed24)
+
+# Objeto que sustituirá los p-values por los robustos de Newey-West en la tabla de salida:
+
+pveo=list(
+ robustos.eo.pooled24[,4],
+ robustos.eo.fixed24[,4])
+
+stargazer(eo.pooled24,eo.fixed24,
+          type="text",
+          report="vc*s",
+          p=pveo,
+          add.lines = list(
+            LLF.eo24,
+            AICS.eo24,
+            digits=4))
+```
+
+
+
+```{r pruebaseq2}
+Tabla2=data.frame(eo.pooled24=matrix(0,2,1),
+                  eo.fixed24=matrix(0,2,1))
+                  
+                         
+# Pruebas F
+Tabla2[1,1]=pFtest(eo.fixed24,eo.pooled24)$p.value*100
+
+
+# Tabla final:
+stargazer(Tabla2,
+          type="text",
+          summary=FALSE, 
+          digits=4)
+
+```
